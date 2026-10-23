@@ -24,3 +24,6 @@ QingJi-3.46.0/SHA256SUMS.txt
 local.properties
 .env
 .env.*
+
+# Original release signing materials stay local.
+/QingJi-original-signing/
