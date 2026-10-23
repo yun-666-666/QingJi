@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.bjbyhd.screenreader_huawei.biller" android:versionCode="62" android:versionName="3.46.0">
- <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="32"/>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.bjbyhd.screenreader_huawei.biller" android:versionCode="63" android:versionName="3.47.0">
+ <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
+ <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
  <queries><intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent><package android:name="com.eg.android.AlipayGphone"/><package android:name="com.tencent.mm"/><package android:name="com.unionpay"/><package android:name="com.jingdong.app.mall"/></queries>
  <application android:name="me.minis.ledger.LedgerApp" android:label="轻记" android:icon="@drawable/icon" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:allowBackup="false" android:fullBackupContent="false" android:usesCleartextTraffic="false" android:supportsRtl="true">
   <activity android:name="me.minis.ledger.MainActivity" android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>

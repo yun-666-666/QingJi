@@ -50,7 +50,7 @@ public final class LedgerDb extends SQLiteOpenHelper {
  private void addIdentityColumns(SQLiteDatabase db){db.execSQL("ALTER TABLE entries ADD COLUMN txkey TEXT NOT NULL DEFAULT ''");db.execSQL("ALTER TABLE entries ADD COLUMN received INTEGER NOT NULL DEFAULT 0");db.execSQL("CREATE INDEX by_txkey ON entries(txkey)");}
  public static SharedPreferences prefs(Context c){return c.getSharedPreferences("settings",Context.MODE_PRIVATE);}
  private static Context app;
- public static boolean allowed(Context c,String pkg){return pkg!=null&&!pkg.equals(c.getPackageName());}
+ public static boolean allowed(Context c,String pkg){return CaptureSources.allowed(c,pkg);}
  public static void rememberLabel(Context c,String pkg){if(pkg==null||pkg.equals("manual")||pkg.endsWith(":screen")||prefs(c).contains("label_"+pkg))return;try{String name=c.getPackageManager().getApplicationLabel(c.getPackageManager().getApplicationInfo(pkg,0)).toString();prefs(c).edit().putString("label_"+pkg,name).apply();}catch(Exception ignored){}}
  public static String label(String source){if(source.endsWith(":screen"))return label(source.substring(0,source.length()-7))+" · 页面";if(app!=null){String name=prefs(app).getString("label_"+source,"");if(!name.isEmpty())return name;}for(int i=0;i<SOURCES.length;i++)if(SOURCES[i].equals(source))return LABELS[i];return source.equals("manual")?"手动":source;}
  static Map<String,String> knownLabels(){Map<String,String> out=new HashMap<>();if(app!=null)for(Map.Entry<String,?> e:prefs(app).getAll().entrySet())if(e.getKey().startsWith("label_")&&e.getValue() instanceof String)out.put(e.getKey().substring(6),(String)e.getValue());return out;}
@@ -69,7 +69,7 @@ public final class LedgerDb extends SQLiteOpenHelper {
   db.beginTransaction();try{
    if(wasPurged(db,ignoredKeys(source,key,identity.key,fingerprint))){db.setTransactionSuccessful();return false;}
    if(key.startsWith("wechat-receipt:")||key.startsWith("alipay-receipt:")){try(Cursor c=db.rawQuery("SELECT _id FROM entries WHERE source=? AND nkey=? LIMIT 1",new String[]{source,key})){if(c.moveToFirst()){db.setTransactionSuccessful();return false;}}}
-   if(!identity.key.isEmpty()){try(Cursor c=db.rawQuery("SELECT _id FROM entries WHERE txkey=? LIMIT 1",new String[]{identity.key})){if(c.moveToFirst()){db.setTransactionSuccessful();return false;}}}
+   int identityMerge=IdentityEvidence.merge(db,source,identity.key,r);if(identityMerge>0){changed=identityMerge==2;db.setTransactionSuccessful();return false;}
    int screenUpdate=ScreenSessionDb.update(db,source,key,time,raw,r,prefs(app).getBoolean("keep_raw",true));if(screenUpdate>0){changed=screenUpdate==2;if(!r.pageSignature.isEmpty())try(Cursor mapped=db.rawQuery("SELECT _id FROM entries WHERE source=? AND nkey LIKE ? LIMIT 1",new String[]{source,ScreenSessionDb.group(key)+":%"})){if(mapped.moveToFirst())PaymentPageDb.remember(db,source,time,r,mapped.getLong(0));}db.setTransactionSuccessful();return false;}
    if(PaymentPageDb.apply(db,source,time,r)){db.setTransactionSuccessful();return false;}
    int dedup=CaptureDedup.apply(db,source,key,time,raw,r,identity.key,fingerprint,prefs(app).getBoolean("keep_raw",true));if(dedup>0){changed=dedup==2;db.setTransactionSuccessful();return false;}

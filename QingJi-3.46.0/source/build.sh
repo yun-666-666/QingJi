@@ -2,7 +2,7 @@
 # Build an unsigned APK. Private release-signing material is intentionally excluded.
 set -eu
 D=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
-: "${ANDROID_JAR:?Set ANDROID_JAR to Android API 34 android.jar}"
+: "${ANDROID_JAR:?Set ANDROID_JAR to Android API 36 android.jar}"
 : "${R8_JAR:?Set R8_JAR to r8.jar containing com.android.tools.r8.R8}"
 : "${AAPT2:?Set AAPT2 to an executable aapt2 for your host}"
 VERSION=$(python3 -c 'import sys,xml.etree.ElementTree as E; print(E.parse(sys.argv[1]).getroot().get("{http://schemas.android.com/apk/res/android}versionName"))' "$D/AndroidManifest.xml")

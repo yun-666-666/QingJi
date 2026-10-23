@@ -24,16 +24,13 @@ public final class PaymentListener extends NotificationListenerService {
   if(sbn==null)return;final long observedAt=System.currentTimeMillis();alipayTrace(sbn.getPackageName(),"收到通知");
   if(!LedgerDb.prefs(this).getBoolean("capture",true)||!LedgerDb.allowed(this,sbn.getPackageName())){alipayTrace(sbn.getPackageName(),"监听暂停或来源禁用");return;}
   Notification n=sbn.getNotification();
-  if(n==null||(n.flags&Notification.FLAG_GROUP_SUMMARY)!=0){alipayTrace(sbn.getPackageName(),n==null?"通知对象为空":"通知分组摘要，跳过");return;}
+  if(n==null){alipayTrace(sbn.getPackageName(),"通知对象为空");return;}
   Bundle b=n.extras;if(b==null){alipayTrace(sbn.getPackageName(),"通知无正文数据");return;}
   if(NotificationEvidence.media(n.category,b.getString("android.template",""),b.containsKey("android.mediaSession"))){PowerDetail.count("media_notification_skipped");alipayTrace(sbn.getPackageName(),"媒体类型通知，跳过");return;}
-  LinkedHashSet<String> parts=new LinkedHashSet<>();
-  add(parts,b.getCharSequence(Notification.EXTRA_TITLE));
-  CharSequence big=b.getCharSequence(Notification.EXTRA_BIG_TEXT);add(parts,big!=null&&big.length()>0?big:b.getCharSequence(Notification.EXTRA_TEXT));
-  add(parts,b.getCharSequence(Notification.EXTRA_SUB_TEXT));
-  CharSequence[] lines=b.getCharSequenceArray(Notification.EXTRA_TEXT_LINES);if((big==null||big.length()==0)&&b.getCharSequence(Notification.EXTRA_TEXT)==null&&lines!=null&&lines.length>0)add(parts,lines[lines.length-1]);
-  StringBuilder text=new StringBuilder();for(String part:parts){if(text.length()>0)text.append('\n');text.append(part);}
-  final String raw=text.toString(),source=sbn.getPackageName(),key=sbn.getKey(),title=String.valueOf(b.getCharSequence(Notification.EXTRA_TITLE,""));final long time=sbn.getPostTime();
+  for(NotificationPayload payload:NotificationPayload.read(n,sbn.getKey(),sbn.getPostTime()))process(sbn.getPackageName(),payload,observedAt);
+ }
+ private void process(String source,NotificationPayload payload,long observedAt){
+  final String raw=payload.text,key=payload.key,title=payload.title;final long time=payload.time;
   if(raw.isEmpty()){alipayTrace(source,"通知正文为空");return;}
   PowerProbe.notification();PowerDetail.source(source);pendingChecked.incrementAndGet();stats(false);
   if(System.currentTimeMillis()-LedgerDb.prefs(this).getLong("last_seen",0)>60000)LedgerDb.prefs(this).edit().putLong("last_seen",System.currentTimeMillis()).putString("last_source",LedgerDb.label(source)).apply();
@@ -53,5 +50,4 @@ public final class PaymentListener extends NotificationListenerService {
    }catch(Exception e){gate.failed(key,time,raw);PowerDetail.count("notification_error");alipayTrace(source,"解析或入库异常，可重试");LedgerDb.prefs(this).edit().putString("last_error","记录失败，请检查剩余存储空间并重新打开应用").apply();}
   });}catch(RejectedExecutionException ignored){}
  }
- private static void add(Set<String> parts,CharSequence s){if(s!=null&&!s.toString().trim().isEmpty())parts.add(s.toString().trim());}
 }
