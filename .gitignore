@@ -27,3 +27,5 @@ local.properties
 
 # Original release signing materials stay local.
 /QingJi-original-signing/
+
+**/.gradle/

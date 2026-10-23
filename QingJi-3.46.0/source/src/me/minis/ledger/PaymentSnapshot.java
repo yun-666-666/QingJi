@@ -8,11 +8,13 @@ public final class PaymentSnapshot {
   public final int id,parent,window,left,top,right,bottom;
   public final String resource,role,text,description;
   public final boolean editable;
+  private final List<String> lines;
   public Node(int id,int parent,int window,int left,int top,int right,int bottom,String resource,String role,String text,String description,boolean editable){
    this.id=id;this.parent=parent;this.window=window;this.left=left;this.top=top;this.right=right;this.bottom=bottom;
    this.resource=resource;this.role=role;this.text=text;this.description=description;this.editable=editable;
+   List<String> parsed=PaymentNodeText.lines(text,description);this.lines=parsed==null?Collections.emptyList():Collections.unmodifiableList(parsed);
   }
-  public List<String> lines(){List<String> lines=PaymentNodeText.lines(text,description);return lines==null?Collections.emptyList():lines;}
+  public List<String> lines(){return lines;}
  }
  public final String pkg;public final long version;public final int window,width,height,left,top;
  public final List<Node> nodes;public final boolean truncated,editable;
