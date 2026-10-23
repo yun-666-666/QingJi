@@ -1,5 +1,6 @@
-# Keep local explanatory documents and verification records off GitHub.
+# Publish the root README; keep other local documents and verification records private.
 *.[mM][dD]
+!/README.md
 QingJi-3.46.0/VERIFICATION.json
 QingJi-3.46.0/SHA256SUMS.txt
 
