@@ -1,0 +1,20 @@
+'use strict';
+(()=>{
+ const $=id=>document.getElementById(id),button=$('heroBudget'),hero=button.closest('.hero'),net=$('net');let usage=null,saving=false,requestVersion=0,frame=0;
+ const valid=s=>['A','B','D'].includes(s)?s:'A',money=n=>(n/100).toFixed(2),compact=n=>n>=10000000000?(n/10000000000).toFixed(2)+'亿':n>=1000000?(n/1000000).toFixed(2)+'万':money(n);
+ function percent(r){return r>999?'999%+':(r<100?Math.min(99,Math.round(r)):r>100?Math.max(101,Math.round(r)):100)+'%';}
+ function fit(){frame=0;net.style.removeProperty('font-size');if(!usage||usage.cents<=0)return;let size=parseFloat(getComputedStyle(net).fontSize)||38;for(let i=0;i<30&&net.scrollWidth>net.clientWidth+1&&size>12;i++){size--;net.style.setProperty('font-size',size+'px','important');}}
+ const schedule=()=>{if(!frame)frame=requestAnimationFrame(fit);};
+ function paint(value){usage=value&&Number.isSafeInteger(value.cents)&&Number.isSafeInteger(value.used)?{...value,cents:Math.max(0,value.cents),used:Math.max(0,value.used),style:valid(value.style)}:null;
+  const show=!!usage?.cents;hero.classList.toggle('has-budget',show);button.hidden=!show;document.querySelectorAll('[data-budget-style]').forEach(b=>{const selected=b.dataset.budgetStyle===valid(usage?.style);b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',selected);});if(!show){button.replaceChildren();schedule();return;}
+  const r=usage.used*100/usage.cents,fill=Math.min(100,r),over=r>100,left=Math.abs(usage.cents-usage.used),word=over?'超':'余',cls=over?'over':r===100?'full':r>=80?'near':'normal',style=valid(usage.style),p=percent(r);
+  const label='<div class="bu-label"><span>月预算</span><em>'+p+'</em></div>',valueHtml='<div class="bu-value"><small>'+word+'</small>¥'+compact(left)+'</div>';button.className='budget-usage '+cls+(style==='B'?' bu-ring':'');
+  if(style==='B')button.innerHTML='<div class="bu-ring-graphic"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="track" cx="22" cy="22" r="18"/><circle class="fill" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="'+fill+' 100"/></svg><span>'+p+'</span></div><div class="bu-ring-copy"><div class="bu-label">月预算</div>'+valueHtml+'</div>';
+  else button.innerHTML=label+(style==='D'?'<div class="bu-segments">'+Array.from({length:10},(_,i)=>'<i><b style="width:'+Math.max(0,Math.min(100,(fill-i*10)*10))+'%"></b></i>').join('')+'</div>':'<div class="bu-rail"><i style="width:'+fill+'%"></i></div>')+valueHtml;
+  button.setAttribute('aria-label','本月总预算 '+money(usage.cents)+' 元，已用 '+money(usage.used)+' 元，'+(over?'超支':'剩余')+' '+money(left)+' 元，使用率 '+r.toFixed(1)+'%，点击详情');schedule();
+ }
+ const old=window.receive;window.receive=data=>{const result=old(data);if(Object.prototype.hasOwnProperty.call(data,'budgetUsage'))paint(data.budgetUsage);return result;};
+ button.onclick=()=>{if(typeof Ledger!=='undefined')Ledger.budgetDetail();else window.toolsToast(button.getAttribute('aria-label'));};
+ document.querySelectorAll('[data-budget-style]').forEach(b=>b.onclick=async()=>{if(saving)return;const style=b.dataset.budgetStyle,epoch=++requestVersion;saving=true;const buttons=[...document.querySelectorAll('[data-budget-style]')];buttons.forEach(x=>{x.disabled=true;x.setAttribute('aria-busy','true');});try{if(typeof Ledger!=='undefined')await window.toolsRequest('budgetStyle',{style});if(epoch!==requestVersion)return;paint({...usage,cents:usage?.cents||0,used:usage?.used||0,style});if(typeof Ledger!=='undefined')Ledger.refresh();}catch(e){window.toolsToast(e.message||'样式保存失败');}finally{saving=false;buttons.forEach(x=>{x.disabled=false;x.removeAttribute('aria-busy');});}});
+ new MutationObserver(schedule).observe(net,{childList:true,characterData:true,subtree:true});if(typeof ResizeObserver!=='undefined')new ResizeObserver(schedule).observe(net);window.addEventListener('resize',schedule);window.paintBudgetUsage=paint;paint(null);
+})();

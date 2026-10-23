@@ -1,0 +1,10 @@
+/* Preserve the original plain ledger date; only make its text tappable. */
+.monthbar #bookDateButton{display:flex;align-items:center;justify-content:center;width:auto;height:auto;min-height:36px;min-width:0;flex:0 1 auto;padding:0;border:0;background:transparent;color:var(--text);box-shadow:none;border-radius:0;line-height:1.2}
+.monthbar #bookDateButton b{font-size:13px;line-height:1.2;overflow-wrap:anywhere;text-align:center}
+/* One calendar, progressive month/year selection; no repeated date rows. */
+#dateModal .date-sheet{padding:20px;max-width:360px}#dateModal .section-title{margin-bottom:10px}#dateModal .section-title h2{font-size:16px}#dateModal .calendar-nav{margin:4px 0 16px;gap:8px}
+#dateModal .calendar-nav button{background:transparent;border:0;min-height:40px;border-radius:10px}#dateModal #dateMonth{width:auto;flex:1;font-size:16px;font-weight:600;color:var(--text);padding:8px 0}#dateModal #dateMonth:disabled{opacity:1;cursor:default}
+#dateModal .calendar-grid{gap:4px}#dateModal .calendar-grid button{min-height:38px;border-radius:50%;font-size:13px;box-shadow:none}#dateModal .calendar-grid button.today:not(.selected){box-shadow:inset 0 0 0 1px var(--border)}
+#dateModal .date-period-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 8px;padding:5px 0;min-height:242px;align-content:center}#dateModal .date-period-grid button{background:transparent;border:0;border-radius:22px;min-height:44px;padding:8px;font-size:14px;color:var(--text)}#dateModal .date-period-grid button.selected{background:var(--accent);color:var(--sheet)}
+#dateModal .date-actions{display:flex;gap:8px;margin-top:20px;padding-top:12px;border-top:1px solid var(--border)}#dateModal .date-actions button{flex:0 0 auto;min-width:60px;min-height:40px;font-size:12px;border-radius:10px}#dateModal #dateToday{margin-right:auto;padding:8px 4px;min-width:36px;background:transparent;border:0;color:var(--accent)}#dateModal #dateCancel{background:transparent;color:var(--muted)}#dateModal #dateApply{padding:8px 18px}
+@media(max-width:370px){#dateModal{padding:16px}#dateModal .date-sheet{padding:18px}.monthbar #bookDateButton b{font-size:12px}}

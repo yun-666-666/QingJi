@@ -1,0 +1,4 @@
+'use strict';
+function merchantGroupName(value){let s=String(value||'').trim().replace(/\s+/g,' ');const m=/^(?:你在)?(.{1,100}?)有一笔\d+(?:\.\d{1,2})?元的(?:免密[/／]?自动扣款|免密|自动扣款)/.exec(s);if(m)s=m[1].trim();if(s.length>=7&&/(校园版|商家版|个人版)$/.test(s))s=s.slice(0,-3);return s;}
+function merchantGroups(rows){const groups=[],map=new Map();for(const e of rows){const name=merchantGroupName(e.merchant);const generic=!name||/^(?:支付|转账|红包|付款|收款|未识别|未知商户|其他|购物订单|支付宝|微信|云闪付|手动)$/.test(name);const key=generic?'single:'+e._id:JSON.stringify([name,e.kind]);let g=map.get(key);if(!g){g={key,name,kind:e.kind,rows:[],cents:0,time:e.time};map.set(key,g);groups.push(g);}g.rows.push(e);g.cents+=e.cents;g.time=Math.max(g.time,e.time);}for(const g of groups)g.rows.sort((a,b)=>b.time-a.time||b._id-a._id);return groups.sort((a,b)=>b.time-a.time);}
+if(typeof module!=='undefined')module.exports={merchantGroupName,merchantGroups};

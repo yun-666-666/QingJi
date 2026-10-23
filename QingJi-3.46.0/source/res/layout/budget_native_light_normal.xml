@@ -1,0 +1,1 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="62dp" android:theme="@style/Budget_light_normal"><include layout="@layout/budget_native_content"/></FrameLayout>

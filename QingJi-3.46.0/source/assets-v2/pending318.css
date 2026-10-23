@@ -1,0 +1,14 @@
+/* Scoped home inbox entry; zero pending remains hidden without a spacer. */
+#pendingBanner{display:flex;align-items:center;justify-content:flex-start;gap:10px;width:100%;min-height:52px;margin:12px 0 16px;padding:10px 13px;border:1px solid #e1e4f6;border-radius:14px;background:#eff1fc;color:#535db7;text-align:left;box-shadow:none;font-size:12px;line-height:1.4}
+#pendingBanner .pending-symbol{display:grid;place-items:center;width:30px;height:30px;flex:none;border-radius:10px;background:#e0e4fa;color:#6470cb}
+#pendingBanner svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#pendingBanner .pending-label{display:flex;align-items:baseline;gap:8px;min-width:0;flex:1;font-weight:600;white-space:nowrap}
+#pendingBanner .pending-divider{font-weight:400;opacity:.5}
+#pendingBanner .pending-quantity{font-size:11px;font-weight:400;color:#747da4;font-variant-numeric:tabular-nums}
+#pendingBanner strong{font-weight:600;color:inherit}
+#pendingBanner .pending-arrow{width:15px;height:15px;flex:none;color:#8e97bd}
+html[data-theme=dark] #pendingBanner{background:#252a40;border-color:#363d59;color:#c3c9ee}
+html[data-theme=dark] #pendingBanner .pending-symbol{background:#343b5b;color:#b2bcff}
+html[data-theme=dark] #pendingBanner .pending-quantity{color:#a9b2d0}
+html[data-theme=dark] #pendingBanner .pending-arrow{color:#8e9abe}
+#pendingBanner[hidden]{display:none!important}

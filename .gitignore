@@ -1,0 +1,25 @@
+# Keep local explanatory documents and verification records off GitHub.
+*.[mM][dD]
+QingJi-3.46.0/VERIFICATION.json
+QingJi-3.46.0/SHA256SUMS.txt
+
+# Local build output, device data, and signing credentials are not release files.
+**/build/
+**/__pycache__/
+*.pyc
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.qjb
+*.log
+local.properties
+.env
+.env.*
