@@ -11,7 +11,7 @@
   const label='<div class="bu-label"><span>月预算</span><em>'+p+'</em></div>',valueHtml='<div class="bu-value"><small>'+word+'</small>¥'+compact(left)+'</div>';button.className='budget-usage '+cls+(style==='B'?' bu-ring':'');
   if(style==='B')button.innerHTML='<div class="bu-ring-graphic"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="track" cx="22" cy="22" r="18"/><circle class="fill" cx="22" cy="22" r="18" pathLength="100" stroke-dasharray="'+fill+' 100"/></svg><span>'+p+'</span></div><div class="bu-ring-copy"><div class="bu-label">月预算</div>'+valueHtml+'</div>';
   else button.innerHTML=label+(style==='D'?'<div class="bu-segments">'+Array.from({length:10},(_,i)=>'<i><b style="width:'+Math.max(0,Math.min(100,(fill-i*10)*10))+'%"></b></i>').join('')+'</div>':'<div class="bu-rail"><i style="width:'+fill+'%"></i></div>')+valueHtml;
-  button.setAttribute('aria-label','本月总预算 '+money(usage.cents)+' 元，已用 '+money(usage.used)+' 元，'+(over?'超支':'剩余')+' '+money(left)+' 元，使用率 '+r.toFixed(1)+'%，点击详情');schedule();
+  button.querySelectorAll('.bu-rail>i,.bu-segments b,.bu-ring-graphic .fill').forEach(el=>window.motionEnter(el));button.setAttribute('aria-label','本月总预算 '+money(usage.cents)+' 元，已用 '+money(usage.used)+' 元，'+(over?'超支':'剩余')+' '+money(left)+' 元，使用率 '+r.toFixed(1)+'%，点击详情');schedule();
  }
  const old=window.receive;window.receive=data=>{const result=old(data);if(Object.prototype.hasOwnProperty.call(data,'budgetUsage'))paint(data.budgetUsage);return result;};
  button.onclick=()=>{if(typeof Ledger!=='undefined')Ledger.budgetDetail();else window.toolsToast(button.getAttribute('aria-label'));};
