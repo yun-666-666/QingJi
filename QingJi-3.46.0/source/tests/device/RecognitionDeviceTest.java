@@ -5,27 +5,13 @@ import android.os.Bundle;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import java.util.List;
-import android.graphics.*;
-import com.google.android.gms.tasks.Tasks;
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.text.*;
-import com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions;
-import java.util.concurrent.TimeUnit;
 
 /** Instrumentation uses an isolated in-memory database and synthetic notifications only. */
 public final class RecognitionDeviceTest extends Instrumentation {
  private int checks;
  private void check(boolean value,String message){checks++;if(!value)throw new AssertionError(message);}
  public void onCreate(Bundle args){super.onCreate(args);start();}
- public void onStart(){Bundle result=new Bundle();try{notifications();fusion();bundledOcr();result.putString("stream","PASS: "+checks+" device checks, including bundled Chinese OCR\n");finish(Activity.RESULT_OK,result);}catch(Throwable error){result.putString("stream","FAIL: "+error.getClass().getSimpleName()+": "+error.getMessage()+"\n");finish(Activity.RESULT_CANCELED,result);}}
- private void bundledOcr()throws Exception{
-  Bitmap bitmap=Bitmap.createBitmap(900,480,Bitmap.Config.ARGB_8888);Canvas canvas=new Canvas(bitmap);canvas.drawColor(Color.WHITE);
-  Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);paint.setColor(Color.BLACK);paint.setTextSize(54);
-  canvas.drawText("支付成功",80,100,paint);canvas.drawText("实付金额 28.50元",80,220,paint);canvas.drawText("完成",80,360,paint);
-  TextRecognizer recognizer=TextRecognition.getClient(new ChineseTextRecognizerOptions.Builder().build());
-  try{Text text=Tasks.await(recognizer.process(InputImage.fromBitmap(bitmap,0)),30,TimeUnit.SECONDS);String output=text.getText().replaceAll("\\s+","");check(output.contains("支付成功"),"bundled Chinese title");check(output.contains("28.50"),"bundled amount recognition");}
-  finally{recognizer.close();bitmap.recycle();}
- }
+ public void onStart(){Bundle result=new Bundle();try{notifications();fusion();result.putString("stream","PASS: "+checks+" device checks\n");finish(Activity.RESULT_OK,result);}catch(Throwable error){result.putString("stream","FAIL: "+error.getClass().getSimpleName()+": "+error.getMessage()+"\n");finish(Activity.RESULT_CANCELED,result);}}
  private void notifications(){
   Notification n=new Notification.Builder(getTargetContext(),"test").setContentTitle("银行").setContentText("支付28…").setStyle(new Notification.BigTextStyle().bigText("支付成功28.50元")).build();
   List<NotificationPayload> rows=NotificationPayload.read(n,"test",1000);check(rows.size()==1&&rows.get(0).text.contains("28.50"),"expanded text");

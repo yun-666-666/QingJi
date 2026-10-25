@@ -35,17 +35,44 @@
   const list=[animate(el,visible?[{opacity:0},{opacity:1}]:[{opacity:1},{opacity:0}],'fast'),animate(sheet,visible?[{transform:shift,opacity:.3},{transform:'none',opacity:1}]:[{transform:'none',opacity:1},{transform:shift,opacity:0}],visible?'base':'fast')].filter(Boolean);layers.set(el,list);
   const finish=()=>{if(layers.get(el)!==list)return;layers.delete(el);el.classList.remove('motion-closing');if(!visible)el.hidden=true;window.syncLayers?.();done?.();};if(list.length)Promise.all(list.map(a=>a.finished.catch(()=>{}))).then(finish);else finish();
  };
- const sun='<circle cx="16" cy="16" r="6"/><path d="M16 2v4m0 20v4M2 16h4m20 0h4M6 6l3 3m14 14 3 3M6 26l3-3M23 9l3-3"/>',moon='<path d="M25 19A11 11 0 0 1 13 5a11 11 0 1 0 12 14Z"/><path d="m24 4 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z"/>';
- function finishTheme(){if(!themeRun)return;const run=themeRun;themeRun=null;run.change();run.animations.forEach(a=>a.cancel());run.decor?.remove();run.transition?.skipTransition();delete root.dataset.themeRunning;}
+ function finishTheme(){if(!themeRun)return;const run=themeRun;themeRun=null;cancelAnimationFrame(run.chromeFrame);delete root.dataset.themeRunning;run.change();if(typeof Ledger!=='undefined')Ledger.endTheme();run.animations.forEach(a=>a.cancel());run.decor?.remove();run.transition?.skipTransition();}
+ // Follow the actual eased reveal, including a mid-flight reversal. The bars use
+ // coverage at their own edge rather than a separate timer or the final theme.
+ function syncThemeChrome(run,reveal,x,y,r){
+  if(typeof Ledger==='undefined')return;
+  const clamp=v=>Math.max(0,Math.min(1,v));
+  const circleCoverage=(radius,edge)=>{const reach=Math.sqrt(Math.max(0,radius*radius-(edge-y)**2));return (Math.min(innerWidth,x+reach)-Math.max(0,x-reach))/innerWidth;};
+  function tick(){
+   if(themeRun!==run)return;
+   const progress=reveal.effect.getComputedTiming().progress??0;let top=progress,bottom=progress;
+   if(scheme==='a'){top=circleCoverage(r*progress,0);bottom=circleCoverage(r*progress,innerHeight);}
+   if(scheme==='c'){top=clamp(-.35+2.1*progress);bottom=clamp(-.75+2.1*progress);}
+   Ledger.themeProgress(top,bottom);run.chromeFrame=requestAnimationFrame(tick);
+  }
+  tick();
+ }
  function decorate(run){
-  if(scheme==='a')return;const el=document.createElement('div');el.className='theme-scene '+(run.to==='dark'?'night':'day')+' scene-'+scheme;el.setAttribute('aria-hidden','true');
-  el.innerHTML='<div class="theme-orbit"></div><div class="theme-beam beam-left"></div><div class="theme-beam beam-right"></div><div class="theme-emblem"><svg viewBox="0 0 32 32">'+(run.to==='dark'?moon:sun)+'</svg><span>'+(run.to==='dark'?'月色入幕':'晨光初启')+'</span></div>'+Array.from({length:9},(_,i)=>'<i class="theme-spark" style="--x:'+(12+(i*31)%77)+'%;--y:'+(17+(i*19)%68)+'%;--turn:'+(i*37)+'deg"></i>').join('');
-  document.body.append(el);run.decor=el;el.querySelectorAll('.theme-orbit,.theme-beam,.theme-emblem,.theme-spark').forEach((node,i)=>node.style.viewTransitionName='qj-fx-'+i);run.effects=()=>{
-  const options={duration:cfg().theme,easing:'cubic-bezier(.3,0,.2,1)',fill:'both'},play=(node,frames)=>run.animations.push(root.animate(frames,{...options,pseudoElement:'::view-transition-new('+node.style.viewTransitionName+')'}));
-  play(el.querySelector('.theme-emblem'),[{opacity:0,transform:scheme==='b'?'scale(.55) rotate(-35deg)':'translate(-80px,24px) rotate(-18deg)'},{opacity:1,transform:'scale(1)',offset:.5},{opacity:0,transform:scheme==='b'?'translateY(-20px) scale(1.1)':'translate(100px,-50px) rotate(18deg)'}]);
-  play(el.querySelector('.theme-orbit'),[{transform:'scale(.3) rotate(-60deg)',opacity:0},{opacity:.7,offset:.4},{transform:'scale(1.6) rotate(50deg)',opacity:0}]);
-  for(const [i,beam] of [...el.querySelectorAll('.theme-beam')].entries())play(beam,[{opacity:0,transform:scheme==='b'?'translateX(0)':'translateX(-110vw) skewX(-22deg)'},{opacity:.9,offset:.2},{opacity:0,transform:scheme==='b'?`translateX(${i?50:-50}vw)`:'translateX(110vw) skewX(-22deg)'}]);
-  el.querySelectorAll('.theme-spark').forEach((spark,i)=>play(spark,[{opacity:0,transform:'scale(.2) translateY(16px)'},{opacity:i%2?.9:.55,transform:'scale(1)',offset:.3+i*.025},{opacity:0,transform:'scale(.4) translateY(-24px)'}]));
+  if(scheme==='a')return;
+  const night=run.to==='dark',el=document.createElement('div');el.className='theme-scene '+(night?'night':'day')+' scene-'+scheme;el.setAttribute('aria-hidden','true');
+  // Light lives on the moving boundary; small trails dissolve into the new theme.
+  el.innerHTML='<div class="theme-beam beam-left"></div><div class="theme-beam beam-right"></div>'+Array.from({length:night?18:8},(_,i)=>'<i class="theme-spark" style="--x:'+(6+(i*37)%89)+'%;--y:'+(7+(i*23)%82)+'%"></i>').join('');
+  document.body.append(el);run.decor=el;
+  [...el.children].forEach((node,i)=>node.style.viewTransitionName='qj-fx-'+i);
+  run.effects=()=>{
+   const options={duration:cfg().theme,easing:'cubic-bezier(.3,0,.2,1)',fill:'both'};
+   const play=(node,frames)=>run.animations.push(root.animate(frames,{...options,pseudoElement:'::view-transition-new('+node.style.viewTransitionName+')'}));
+   const slope=Math.atan(-.4*innerWidth/innerHeight)*180/Math.PI;
+   for(const [i,beam] of [...el.querySelectorAll('.theme-beam')].entries()){
+    const from=scheme==='b'?'translateX(0)':`translateX(-35vw) skewX(${slope}deg)`;
+    const to=scheme==='b'?`translateX(${i?50:-50}vw)`:`translateX(175vw) skewX(${slope}deg)`;
+    play(beam,[{opacity:0,transform:from},{opacity:1,offset:.16},{opacity:.8,offset:.68},{opacity:0,transform:to}]);
+   }
+   el.querySelectorAll('.theme-spark').forEach((spark,i)=>{
+    const left=parseFloat(spark.style.getPropertyValue('--x'))<50;
+    let drift=`translate(${left?-18:18}px,-12px) scale(.5)`;
+    if(scheme==='c')drift=night?'translate(65px,-18px) scaleX(1.5)':'translate(40px,-30px)';
+    play(spark,[{opacity:0,transform:'scale(.2)'},{opacity:0,offset:.18+(i%4)*.045},{opacity:night?.75:.5,transform:'none',offset:.48+(i%4)*.04},{opacity:0,transform:drift}]);
+   });
   };
  }
  window.motionTheme=(to,change)=>{
@@ -54,8 +81,23 @@
   active.forEach(a=>a.finish());for(const [el,n] of numbers){cancelAnimationFrame(n.frame);n.value=n.target;el.textContent=n.format(n.target);}
   const rect=document.getElementById('themeToggle').getBoundingClientRect(),x=rect.left+rect.width/2,y=rect.top+rect.height/2,r=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
   const paths=scheme==='a'?[`circle(0px at ${x}px ${y}px)`,`circle(${r}px at ${x}px ${y}px)`]:scheme==='b'?['inset(0 50% 0 50% round 22px)','inset(0 0 0 0 round 0px)']:['polygon(-35% 0,-35% 0,-75% 100%,-75% 100%)','polygon(-35% 0,175% 0,135% 100%,-75% 100%)'];
-  const run={to,toTarget:to,change,trigger:rect,animations:[],decor:null,transition:null};themeRun=run;root.dataset.themeRunning='true';const transition=document.startViewTransition(()=>{change();decorate(run);});run.transition=transition;
-  transition.ready.then(()=>{if(themeRun!==run)return;const reveal=root.animate([{clipPath:paths[0]},{clipPath:paths[1]}],{duration:cfg().theme,easing:'cubic-bezier(.3,0,.2,1)',fill:'both',pseudoElement:'::view-transition-new(root)'});run.animations.push(reveal);run.effects?.();if(run.toTarget!==run.to)run.animations.forEach(a=>{a.currentTime=0;a.reverse();});reveal.finished.then(()=>{if(themeRun===run)finishTheme();}).catch(()=>{});}).catch(()=>{if(themeRun===run)finishTheme();});transition.finished.finally(()=>{if(themeRun===run)finishTheme();});
+  const run={to,toTarget:to,change,trigger:rect,animations:[],decor:null,transition:null,chromeFrame:0};themeRun=run;root.dataset.themeRunning='true';
+  // Keep the old page outside C's moving clip. Only transform composited snapshots;
+  // animating a full-screen polygon forces expensive clipping on Android WebView.
+  const bodyStyle=document.body.style,background=bodyStyle.backgroundColor;
+  if(scheme==='c'){bodyStyle.viewTransitionName='qj-before';bodyStyle.backgroundColor=getComputedStyle(root).backgroundColor;}
+  const restoreBody=()=>{if(scheme==='c'){bodyStyle.removeProperty('view-transition-name');bodyStyle.backgroundColor=background;}};
+  if(typeof Ledger!=='undefined')Ledger.beginTheme(to);const transition=document.startViewTransition(()=>{restoreBody();change();decorate(run);});run.transition=transition;
+  transition.ready.then(()=>{
+   if(themeRun!==run)return;
+   const options={duration:cfg().theme,easing:'cubic-bezier(.3,0,.2,1)',fill:'both'};let reveal;
+   if(scheme==='c'){
+    const slope=Math.atan(-.4*innerWidth/innerHeight)*180/Math.PI;
+    reveal=root.animate([-245,-35].map(x=>({transform:`translateX(${x}vw) skewX(${slope}deg)`})),{...options,pseudoElement:'::view-transition-image-pair(root)'});
+    run.animations.push(root.animate([245,35].map(x=>({transform:`skewX(${-slope}deg) translateX(${x}vw)`})),{...options,pseudoElement:'::view-transition-new(root)'}));
+   }else reveal=root.animate([{clipPath:paths[0]},{clipPath:paths[1]}],{...options,pseudoElement:'::view-transition-new(root)'});
+   run.animations.push(reveal);run.effects?.();syncThemeChrome(run,reveal,x,y,r);if(run.toTarget!==run.to)run.animations.forEach(a=>{a.currentTime=0;a.reverse();});reveal.finished.then(()=>{if(themeRun===run)finishTheme();}).catch(()=>{});
+  }).catch(()=>{if(themeRun===run)finishTheme();});transition.finished.finally(()=>{restoreBody();if(themeRun===run)finishTheme();});
  };
  window.motionIndicators=()=>{document.querySelectorAll('.period-tabs,nav').forEach(container=>{const selected=container.querySelector('button.selected,button.active');if(!selected)return;let marker=container.querySelector('.motion-indicator');if(!marker){marker=document.createElement('i');marker.className='motion-indicator';marker.setAttribute('aria-hidden','true');container.prepend(marker);}marker.style.width=selected.offsetWidth+'px';marker.style.height=selected.offsetHeight+'px';marker.style.top=selected.offsetTop+'px';const to=`translateX(${selected.offsetLeft}px)`;animate(marker,[{transform:getComputedStyle(marker).transform},{transform:to}]);marker.style.transform=to;});};
  document.addEventListener('DOMContentLoaded',()=>{

@@ -12,7 +12,7 @@ import java.util.concurrent.Executor;
 
 /** Opt-in, in-memory screenshot processing; only a success-label fingerprint is stored. */
 final class PaymentVisual {
- interface Callback {boolean current(PaymentSnapshot s);void result(String status,boolean matched);void matched(PaymentSnapshot snapshot,int titleTop);}
+ interface Callback {boolean current(PaymentSnapshot s);void result(String status,boolean matched);}
  private final AccessibilityService service;private final Executor executor;private final Handler main=new Handler(Looper.getMainLooper());
  private long last=-10000;private boolean busy;private int generation;
  PaymentVisual(AccessibilityService service,Executor executor){this.service=service;this.executor=executor;}
@@ -56,7 +56,7 @@ final class PaymentVisual {
      final String value=feature;main.post(()->{busy=false;if(request!=generation||!prefs.getBoolean("visual_capture",false)||!callback.current(snapshot))return;
       if(value.isEmpty()){callback.result("截图没有足够的页面特征，等待文字或通知证据",false);return;}
       if(training){prefs.edit().putString(key,snapshot.version+","+snapshot.width+","+snapshot.height+","+roi.left+","+roi.top+","+roi.right+","+roi.bottom+","+value).apply();callback.result("已学习当前版本成功标题的局部外观（不含金额）",false);}
-      else{boolean matched=VisualPattern.matches(reference,value);callback.result(matched?"外观匹配本机成功页，正在补读文字":"页面外观不匹配，等待文字或通知证据",matched);if(matched)callback.matched(snapshot,snapshot.top+roi.top);}
+      else{boolean matched=VisualPattern.matches(reference,value);callback.result(matched?"外观匹配本机成功页，正在补读节点；仍须文字金额证据":"页面外观不匹配，等待文字或通知证据",matched);}
      });
     }
    }

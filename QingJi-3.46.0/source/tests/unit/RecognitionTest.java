@@ -4,6 +4,7 @@ import java.util.*;
 
 /** Synthetic snapshot replay: these fixtures make no claim about a particular live app version. */
 public final class RecognitionTest {
+ @org.junit.Test public void replay(){main(new String[0]);}
  private static int checks;
  private static void check(boolean value,String label){checks++;if(!value)throw new AssertionError(label);}
  private static PaymentSnapshot.Node n(int id,int parent,String text,int x,int y){return new PaymentSnapshot.Node(id,parent,7,x,y,x+120,y+40,"","android.widget.TextView",text,"",false);}

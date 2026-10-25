@@ -1,4 +1,4 @@
-"""Run regression tests with the same ML Kit dependency graph as the application."""
+"""Run recognition regression tests with the application build configuration."""
 import argparse
 from pathlib import Path
 import os
