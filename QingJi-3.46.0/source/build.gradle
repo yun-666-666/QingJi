@@ -7,8 +7,8 @@ android {
         applicationId 'com.bjbyhd.screenreader_huawei.biller'
         minSdk 26
         targetSdk 36
-        versionCode 64
-        versionName '3.48.0'
+        versionCode 65
+        versionName '3.49.0'
         testInstrumentationRunner 'me.minis.ledger.RecognitionDeviceTest'
     }
     sourceSets {
