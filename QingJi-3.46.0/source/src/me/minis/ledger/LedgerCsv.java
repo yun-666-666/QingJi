@@ -11,11 +11,11 @@ final class LedgerCsv {
   Writer out=new BufferedWriter(new OutputStreamWriter(new BackupStream.LimitedOutput(stream),"UTF-8"));
   SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.CHINA);
   db.beginTransactionNonExclusive();try{
-   out.write("\uFEFF时间,来源,类型,金额（元）,商户,分类,状态\r\n");
-   try(Cursor c=db.rawQuery("SELECT time,source,kind,cents,merchant,category,status FROM entries WHERE status IN ('confirmed','review') ORDER BY time DESC,_id DESC",null)){
+   out.write("\uFEFF时间,来源,类型,金额（元）,商户,分类,状态,口径,资金用途\r\n");
+   try(Cursor c=db.rawQuery("SELECT time,source,kind,cents,merchant,category,status,COALESCE((SELECT group_concat(DISTINCT category) FROM finance f WHERE f.entry=entries._id AND type IN ('case','settlement')),'') FROM entries WHERE status IN ('confirmed','review') ORDER BY time DESC,_id DESC",null)){
     while(c.moveToNext()){
      String kind=c.getString(2);long cents=c.getLong(3);
-     String[] cols={df.format(new Date(c.getLong(0))),LedgerDb.label(c.getString(1)),kind.equals("expense")?"支出":kind.equals("income")?"收入":"退款",(cents/100)+"."+String.format(Locale.ROOT,"%02d",cents%100),c.getString(4),c.getString(5),c.getString(6).equals("confirmed")?"已确认":"待确认"};
+     String[] cols={df.format(new Date(c.getLong(0))),LedgerDb.label(c.getString(1)),kind.equals("expense")?"支出":kind.equals("income")?"收入":"退款",(cents/100)+"."+String.format(Locale.ROOT,"%02d",cents%100),c.getString(4),c.getString(5),c.getString(6).equals("confirmed")?"已确认":"待确认","原始资金流水",c.getString(7).replace("reimbursement","报销结算").replace("loanOut","借出及归还").replace("loanIn","借入及归还")};
      for(int j=0;j<cols.length;j++){if(j>0)out.write(',');out.write(cell(cols[j]));}out.write("\r\n");
     }
    }out.flush();db.setTransactionSuccessful();

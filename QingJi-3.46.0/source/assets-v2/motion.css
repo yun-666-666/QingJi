@@ -41,3 +41,12 @@ html[data-motion=c]::view-transition-new(root){width:100vw;height:100%;transform
 .bu-rail>i,.bu-segments b{transform-origin:left center}.bu-ring-graphic .fill{transform-origin:center}
 @media(prefers-reduced-motion:reduce){.theme-scene{display:none}}
 ::view-transition{pointer-events:none}
+
+/* Keep feedback local so scrolling and text remain steady. */
+.merchant-group[open]>summary>svg{transform:rotate(180deg)}
+.merchant-group[data-expanded=false]>summary>svg{transform:rotate(0deg)}
+#settings details{box-sizing:border-box}
+#clearSearch{flex:none;width:32px;height:32px;padding:0;border:0;border-radius:50%;font-size:22px;line-height:1;background:var(--soft);color:var(--muted)}
+#search::-webkit-search-cancel-button{display:none}
+.transaction,.merchant-group>summary{transition:background-color var(--motion-fast,140ms)}
+#loadBook:disabled,#loadReview:disabled{opacity:.65}

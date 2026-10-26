@@ -16,7 +16,7 @@ public final class BackupStream implements AutoCloseable {
  public static final long MAX_BYTES=512L*1024*1024;
  public static final int MAX_ROWS=1000000,MAX_KEYS=4000000;
  final SQLiteDatabase stage;private final File file;public int version;public long rows,keys;public String plans="";
- private BackupStream(File f){file=f;stage=SQLiteDatabase.openOrCreateDatabase(f,null);stage.execSQL("CREATE TABLE rows(n INTEGER PRIMARY KEY,payload TEXT NOT NULL,inserted INTEGER NOT NULL DEFAULT 0,fp TEXT,ref TEXT,reason TEXT)");stage.execSQL("CREATE TABLE markers(token TEXT PRIMARY KEY)");}
+ private BackupStream(File f){file=f;stage=SQLiteDatabase.openOrCreateDatabase(f,null);stage.execSQL("CREATE TABLE rows(n INTEGER PRIMARY KEY,payload TEXT NOT NULL,inserted INTEGER NOT NULL DEFAULT 0,fp TEXT,ref TEXT,reason TEXT)");stage.execSQL("CREATE TABLE markers(token TEXT PRIMARY KEY)");stage.execSQL("CREATE TABLE finance(payload TEXT NOT NULL)");}
  public static final class LimitedInput extends FilterInputStream {
   private long count;public LimitedInput(InputStream in){super(in);}
   private void add(int n)throws IOException{if(n>0&&(count+=n)>MAX_BYTES)throw new IOException("备份超过512MiB安全上限");}
@@ -49,6 +49,7 @@ public final class BackupStream implements AutoCloseable {
     else if(name.equals("version"))version=r.nextInt();
     else if(name.equals("exportedAt"))r.nextLong();
     else if(name.equals("plans")){plans=r.nextString();if(plans.length()>22000)throw new IOException("计划备份过长");}
+    else if(name.equals("finance")){int count=0;r.beginArray();while(r.hasNext()){if(++count>MAX_KEYS)throw new IOException("关系条目过多");String text=r.nextString();JSONObject object=new JSONObject(text);if(text.length()>20000)throw new IOException("关系字段过长");ContentValues v=new ContentValues();v.put("payload",object.toString());stage.insertOrThrow("finance",null,v);}r.endArray();}
     else if(name.equals("entries")){r.beginArray();while(r.hasNext()){
      if(++rows>MAX_ROWS)throw new IOException("备份超过100万条安全上限");
      JSONObject o=new JSONObject();Set<String> fields=new HashSet<>();r.beginObject();
@@ -61,7 +62,7 @@ public final class BackupStream implements AutoCloseable {
     else if(name.equals("ignoredKeys")){r.beginArray();while(r.hasNext()){if(++keys>MAX_KEYS)throw new IOException("去重标记超过安全上限");String key=r.nextString();if(!MARKER.matcher(key).matches())throw new IOException("去重标记不合法");ContentValues v=new ContentValues();v.put("token",key);stage.insertWithOnConflict("markers",null,v,SQLiteDatabase.CONFLICT_IGNORE);}r.endArray();}
     else throw new IOException("不支持的备份字段："+name);
    }r.endObject();if(r.peek()!=JsonToken.END_DOCUMENT)throw new IOException("备份尾部有额外内容");
-   if(!app.equals("notification-ledger")||(version!=1&&version!=2)||!seen.contains("entries"))throw new IOException("不是轻记支持的备份格式");
+   if(!app.equals("notification-ledger")||(version!=1&&version!=2&&version!=3)||!seen.contains("entries"))throw new IOException("不是轻记支持的备份格式");
    stage.setTransactionSuccessful();
   }finally{stage.endTransaction();}
  }

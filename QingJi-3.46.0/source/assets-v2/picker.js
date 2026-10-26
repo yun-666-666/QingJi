@@ -8,7 +8,7 @@ if(typeof module!=='undefined')module.exports={validLocalTime,pickerISO,calendar
 if(typeof document!=='undefined'){
  const $=id=>document.getElementById(id);let draft=new Date(),previousFocus=null,confirmResolve=null,bookMode=null,bookApply=null,view='day',yearPage=0;
  function focusGrid(){const box=view==='day'?$('dateGrid'):$('datePeriods');const b=box.querySelector('[aria-pressed="true"]')||box.querySelector('button');if(b)b.focus({preventScroll:true});}
- function showView(next){view=next;yearPage=Math.floor((draft.getFullYear()-1970)/12)*12+1970;draw();focusGrid();}
+ function showView(next){view=next;yearPage=Math.floor((draft.getFullYear()-1970)/12)*12+1970;draw();window.motionEnter($(view==='day'?'dateGrid':'datePeriods'),'fast');focusGrid();}
  function syncTimeLabel(){const d=validLocalTime($('editTime').value);$('editTimeText').textContent=d?d.getFullYear()+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'):'选择时间';}
  function draw(){
   const y=draft.getFullYear(),m=draft.getMonth(),today=new Date(),dayView=view==='day';
@@ -29,7 +29,7 @@ if(typeof document!=='undefined'){
  function openDate(options){bookMode=options&&options.mode||null;bookApply=bookMode?options.apply:null;draft=bookMode?new Date(options.anchor):validLocalTime($('editTime').value)||new Date();previousFocus=document.activeElement;document.activeElement.blur();$('dateModal').classList.toggle('book-date',!!bookMode);$('dateTitle').textContent=bookMode?'跳转日期':'交易时间';$('dateClose').setAttribute('aria-label',bookMode?'关闭日期选择':'关闭时间选择');$('dateToday').textContent=bookMode?'今天':'现在';$('dateApply').textContent='确定';view=bookMode==='month'?'month':'day';yearPage=Math.floor((draft.getFullYear()-1970)/12)*12+1970;document.querySelector('#dateModal .time-row').hidden=!!bookMode;$('dateHour').value=String(draft.getHours()).padStart(2,'0');$('dateMinute').value=String(draft.getMinutes()).padStart(2,'0');$('dateError').textContent='';draw();window.setLayerVisible($('dateModal'),true);$('dateClose').focus({preventScroll:true});}
  window.openBookDate=(anchor,mode,apply)=>openDate({anchor,mode,apply});
  $('editTimeButton').onclick=()=>openDate();$('dateClose').onclick=closeDate;$('dateCancel').onclick=closeDate;$('dateModal').onclick=e=>{if(e.target===$('dateModal'))closeDate();};
- function navigateDate(n){if(view==='day')draft=shiftPickerMonth(draft,n);else if(view==='month')draft=setPickerPeriod(draft,draft.getFullYear()+n,draft.getMonth());else yearPage=Math.max(1970,Math.min(2090,yearPage+n*12));draw();}
+ function navigateDate(n){if(view==='day')draft=shiftPickerMonth(draft,n);else if(view==='month')draft=setPickerPeriod(draft,draft.getFullYear()+n,draft.getMonth());else yearPage=Math.max(1970,Math.min(2090,yearPage+n*12));draw();window.motionEnter($(view==='day'?'dateGrid':'datePeriods'),'fast',n);}
  $('datePrev').onclick=()=>navigateDate(-1);$('dateNext').onclick=()=>navigateDate(1);
  $('dateMonth').onclick=()=>showView(view==='day'?'month':'year');
  $('dateToday').onclick=()=>{draft=new Date();view=bookMode==='month'?'month':'day';$('dateHour').value=String(draft.getHours()).padStart(2,'0');$('dateMinute').value=String(draft.getMinutes()).padStart(2,'0');draw();};

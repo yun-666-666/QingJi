@@ -9,9 +9,11 @@ import java.util.List;
 /** Instrumentation uses an isolated in-memory database and synthetic notifications only. */
 public final class RecognitionDeviceTest extends Instrumentation {
  private int checks;
+ private boolean polish;
+ private Bundle options;
  private void check(boolean value,String message){checks++;if(!value)throw new AssertionError(message);}
- public void onCreate(Bundle args){super.onCreate(args);start();}
- public void onStart(){Bundle result=new Bundle();try{notifications();fusion();result.putString("stream","PASS: "+checks+" device checks\n");finish(Activity.RESULT_OK,result);}catch(Throwable error){result.putString("stream","FAIL: "+error.getClass().getSimpleName()+": "+error.getMessage()+"\n");finish(Activity.RESULT_CANCELED,result);}}
+ public void onCreate(Bundle args){super.onCreate(args);options=args;polish=args!=null&&args.getString("polish", "false").equals("true");start();}
+ public void onStart(){Bundle result=new Bundle();try{if(options!=null&&options.getString("finance","false").equals("true")){result.putString("stream",(options.getString("suite","").equals("extended")?new FinanceDeviceChecks(getTargetContext()).runExtended():new FinanceDeviceChecks(getTargetContext()).run()));finish(Activity.RESULT_OK,result);return;}if(polish){result.putString("stream",new UiPolishDeviceChecks(this).run(options));finish(Activity.RESULT_OK,result);return;}notifications();fusion();result.putString("stream","PASS: "+checks+" device checks\n");finish(Activity.RESULT_OK,result);}catch(Throwable error){result.putString("stream","FAIL: "+error.getClass().getSimpleName()+": "+error.getMessage()+"\n");finish(Activity.RESULT_CANCELED,result);}}
  private void notifications(){
   Notification n=new Notification.Builder(getTargetContext(),"test").setContentTitle("银行").setContentText("支付28…").setStyle(new Notification.BigTextStyle().bigText("支付成功28.50元")).build();
   List<NotificationPayload> rows=NotificationPayload.read(n,"test",1000);check(rows.size()==1&&rows.get(0).text.contains("28.50"),"expanded text");
