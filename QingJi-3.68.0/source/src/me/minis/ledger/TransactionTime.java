@@ -1,0 +1,13 @@
+package me.minis.ledger;
+import java.util.*;import java.util.regex.*;
+/** Transaction clocks only. Never treat observation time or a page-wide unrelated clock as payment time. */
+final class TransactionTime {
+ private static final Pattern FULL=Pattern.compile("(20[0-9]{2})[-/.年]([0-9]{1,2})[-/.月]([0-9]{1,2})日?[ T\\s]+([0-9]{1,2})[:：]([0-9]{2})(?:[:：]([0-9]{2}))?");
+ private static final Pattern CLOCK=Pattern.compile("(?:(昨天|今天))?(凌晨|早上|上午|中午|下午|晚上)?([0-9]{1,2})[:：]([0-9]{2})");
+ private static final Pattern LABEL=Pattern.compile("^(?:交易时间|支付时间|付款时间|扣款时间|收款时间|到账时间)\\s*[:：]?\\s*(.*)$");
+ static String clean(String s){return s==null?"":s.replaceAll("[\\u200b\\ufeff]","").replace('\u00a0',' ').replace('\u3000',' ').trim();}
+ static long clock(String text,long now){String s=clean(text);Matcher full=FULL.matcher(s);try{Calendar c=Calendar.getInstance();c.setLenient(false);if(full.matches()){c.clear();c.set(Integer.parseInt(full.group(1)),Integer.parseInt(full.group(2))-1,Integer.parseInt(full.group(3)),Integer.parseInt(full.group(4)),Integer.parseInt(full.group(5)),full.group(6)==null?0:Integer.parseInt(full.group(6)));}else{Matcher m=CLOCK.matcher(s.replaceAll("\\s+",""));if(!m.matches()||m.group(1)==null&&m.group(2)==null)return 0;int h=Integer.parseInt(m.group(3)),min=Integer.parseInt(m.group(4));String part=m.group(2);if(h>23||min>59)return 0;if(part!=null&&h>12)return 0;if(("下午".equals(part)||"晚上".equals(part))&&h<12)h+=12;if("中午".equals(part)&&h<11)h+=12;if(("凌晨".equals(part)||"上午".equals(part)||"早上".equals(part))&&h==12)h=0;c.setTimeInMillis(now);if("昨天".equals(m.group(1)))c.add(Calendar.DAY_OF_MONTH,-1);c.set(Calendar.HOUR_OF_DAY,h);c.set(Calendar.MINUTE,min);c.set(Calendar.SECOND,0);c.set(Calendar.MILLISECOND,0);}long t=c.getTimeInMillis();return t>0&&t<=now+60000?t:0;}catch(RuntimeException e){return 0;}}
+ static long labelled(String raw,long now){if(raw==null)return 0;String[] lines=raw.split("[\\r\\n]+");long result=0;for(int i=0;i<lines.length;i++){Matcher m=LABEL.matcher(clean(lines[i]));if(!m.matches())continue;String value=m.group(1);if(value.isEmpty()&&i+1<lines.length)value=clean(lines[++i]);long t=clock(value,now);if(t==0||result!=0&&result!=t)return 0;result=t;}return result;}
+ static long day(long time){Calendar c=Calendar.getInstance();c.setTimeInMillis(time);c.set(Calendar.HOUR_OF_DAY,0);c.set(Calendar.MINUTE,0);c.set(Calendar.SECOND,0);c.set(Calendar.MILLISECOND,0);return c.getTimeInMillis();}
+ static long nextDay(long time){Calendar c=Calendar.getInstance();c.setTimeInMillis(day(time));c.add(Calendar.DAY_OF_MONTH,1);return c.getTimeInMillis();}
+}

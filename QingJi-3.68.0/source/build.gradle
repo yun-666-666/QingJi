@@ -1,0 +1,34 @@
+plugins { id 'com.android.application' version '8.13.0' }
+
+android {
+    namespace 'me.minis.ledger'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'com.bjbyhd.screenreader_huawei.biller'
+        minSdk 26
+        targetSdk 36
+        versionCode 85
+        versionName '3.68.0'
+        testInstrumentationRunner 'me.minis.ledger.RecognitionDeviceTest'
+    }
+    sourceSets {
+        main { manifest.srcFile 'AndroidManifest.xml'; java.srcDirs = ['src']; res.srcDirs = ['res']; assets.srcDirs = ['assets-v2'] }
+        test { java.srcDirs = ['tests/unit'] }
+        androidTest { java.srcDirs = ['tests/device']; assets.srcDirs = ['tests/device/assets'] }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_1_8; targetCompatibility JavaVersion.VERSION_1_8 }
+    buildTypes {
+        debug { applicationIdSuffix project.hasProperty('deviceUi') ? '' : '.verification' }
+        release { minifyEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), 'tools/release-rules.pro' }
+    }
+    packaging { jniLibs { useLegacyPackaging = true } }
+    splits {
+        abi { enable true; reset(); include 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'; universalApk true }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}

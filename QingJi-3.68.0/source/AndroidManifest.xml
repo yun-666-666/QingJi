@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="85" android:versionName="3.68.0">
+ <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
+ <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+ <queries><intent><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent><package android:name="com.eg.android.AlipayGphone"/><package android:name="com.tencent.mm"/><package android:name="com.unionpay"/><package android:name="com.jingdong.app.mall"/></queries>
+ <application android:name="me.minis.ledger.LedgerApp" android:label="轻记" android:icon="@drawable/icon" android:theme="@style/QingJiTheme" android:allowBackup="false" android:fullBackupContent="false" android:usesCleartextTraffic="false" android:supportsRtl="true">
+  <activity android:name="me.minis.ledger.MainActivity" android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden|uiMode" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+  <service android:name="me.minis.ledger.PaymentListener" android:label="轻记 · 本地付款记录" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true"><intent-filter><action android:name="android.service.notification.NotificationListenerService"/></intent-filter></service>
+  <service android:name="me.minis.ledger.PaymentScreenService" android:label="轻记 · 支付页面识别" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE" android:exported="true"><intent-filter><action android:name="android.accessibilityservice.AccessibilityService"/></intent-filter><meta-data android:name="android.accessibilityservice" android:resource="@xml/payment_accessibility"/></service>
+  <service android:name="me.minis.ledger.IgnoredCleanup" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="false"/>
+  <receiver android:name="me.minis.ledger.SummaryNotice" android:exported="false"/>
+  <receiver android:name="me.minis.ledger.LedgerWidget" android:label="轻记 · 消费汇总" android:exported="false"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE"/></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/ledger_widget"/></receiver>
+ </application>
+</manifest>

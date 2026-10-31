@@ -1,0 +1,231 @@
+{
+  "schema": 1,
+  "version": "2026.10.12.2",
+  "implementation": "Independent templates; upstream regex/source code not copied",
+  "reference": {
+    "project": "AutoAccountingOrg/AutoResource",
+    "commit": "20a773cc9cf0f678d398697b8207fc1ce8f9bbf43",
+    "scope": "notice and sms scenario taxonomy; hook payloads not imported",
+    "license": "No root license in resource snapshot; upstream application GPL-3.0, no direct code incorporation"
+  },
+  "limits": {
+    "input": "notification text only; no direct SMS permission",
+    "amount": "unique directed RMB amount, balances excluded only when labelled",
+    "identity": "nearby same amount is not a unique transaction",
+    "unsupported": [
+      "hook payload",
+      "OCR",
+      "loan principal",
+      "credit repayment",
+      "internal wallet transfer",
+      "investment valuation"
+    ],
+    "officialApi": "field semantics only, not merchant data access"
+  },
+  "rules": [
+    {
+      "id": "alipay-expense-notice",
+      "source": "alipay",
+      "kind": "expense",
+      "description": "有一笔支出的实际交易提醒，非积分数量",
+      "regex": "你有一笔\\s*([0-9]{1,9}(?:\\.[0-9]{1,2})?)\\s*元的支出(?=[，,。]|$)",
+      "policy": "review"
+    },
+    {
+      "id": "bank-parenthesis-expense",
+      "source": "bank",
+      "kind": "expense",
+      "description": "银行动账支出及附括号交易类型",
+      "regex": "(?:支出|扣款|消费)(?:金额)?\\s*(?:[（(][^）)\\n]{1,50}[）)])?\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-parenthesis-income",
+      "source": "bank",
+      "kind": "income",
+      "description": "银行收入、入账及工资/转账备注",
+      "regex": "(?:收入|入账|存入|转入)(?:金额)?\\s*(?:[（(][^）)\\n]{1,50}[）)])?\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-event-debit",
+      "source": "bank",
+      "kind": "expense",
+      "description": "发生快捷支付扣款人民币金额",
+      "regex": "发生(?:快捷支付|银联|网上支付)?扣款[，,：:\\s]*(?:人民币|RMB|CNY|[¥￥])\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)(?:元)?(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-event-refund",
+      "source": "bank",
+      "kind": "refund",
+      "description": "已发生快捷支付退款",
+      "regex": "发生(?:快捷支付|银联|网上支付)?退款[，,：:\\s]*(?:人民币|RMB|CNY|[¥￥])\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)(?:元)?(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-online-purchase",
+      "source": "bank",
+      "kind": "expense",
+      "description": "银行卡网上支付金额",
+      "regex": "(?:网上支付|网上支付支取|银联扣款)\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-credited-funds",
+      "source": "bank",
+      "kind": "income",
+      "description": "已入账款项，人民币金额",
+      "regex": "入账款项[，,：:\\s]*(?:人民币|RMB|CNY|[¥￥])\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)(?:元)?(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-completed-income",
+      "source": "bank",
+      "kind": "income",
+      "description": "完成转存/转入交易",
+      "regex": "完成(?:转存|转入|存入)交易\\s*(?:人民币|RMB|CNY|[¥￥])\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)(?:元)?(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-completed-expense",
+      "source": "bank",
+      "kind": "expense",
+      "description": "完成支付/扣款/消费交易",
+      "regex": "完成(?:支付|扣款|消费)交易\\s*(?:人民币|RMB|CNY|[¥￥])\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)(?:元)?(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-returned-deposit",
+      "source": "bank",
+      "kind": "refund",
+      "description": "消费退货存入人民币金额",
+      "regex": "消费退货存入(?:人民币|RMB|CNY|[¥￥])\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "transport-tap-completed",
+      "source": "nfc",
+      "kind": "expense",
+      "description": "NFC交通卡刷卡完成后的交易金额",
+      "regex": "刷卡完成\\s+交易金额\\s*[:：]\\s*([0-9]{1,9}(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-debit-completed",
+      "source": "bank",
+      "kind": "expense",
+      "description": "银行卡已扣款/已支出/已消费",
+      "regex": "(?:已扣款|已支出|已消费)\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-income-completed",
+      "source": "bank",
+      "kind": "income",
+      "description": "银行卡已入账/已收入",
+      "regex": "(?:已入账|已收入)\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "bank-refund-completed",
+      "source": "bank",
+      "kind": "refund",
+      "description": "银行卡退货或退款已到账",
+      "regex": "(?:退货入账|退款入账|退款已到账|退款到账)\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "alipay-code-collection",
+      "source": "alipay",
+      "kind": "income",
+      "description": "收款码本人收款成功金额",
+      "regex": "(?:收款成功|成功收款)\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "alipay-transfer-credited",
+      "source": "alipay",
+      "kind": "income",
+      "description": "支付宝本人转账到账",
+      "regex": "(?:转账到账|转账已到账|转账收款成功)\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "alipay-refund-credited",
+      "source": "alipay",
+      "kind": "refund",
+      "description": "支付宝明确退款已到账",
+      "regex": "(?:退款到账|退款已到账|退款成功)\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    },
+    {
+      "id": "alipay-auto-debit-completed",
+      "source": "alipay",
+      "kind": "expense",
+      "description": "已完成代扣，非签约或提醒",
+      "regex": "(?:自动扣款成功|代扣成功|免密支付成功)\\s*(?:人民币|RMB|CNY|[¥￥])?\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)\\s*元(?=[，,。；;\\s]|$)",
+      "policy": "confirmed"
+    }
+  ],
+  "guards": {
+    "never_transaction": [
+      "播放通知",
+      "纯价格",
+      "余额提醒",
+      "验证码",
+      "限额",
+      "待付款",
+      "收款请求",
+      "处理中",
+      "支付失败",
+      "退款申请",
+      "交易关闭/撤销/订单取消",
+      "退款仅受理或商家同意",
+      "预计或等待到账"
+    ],
+    "review": [
+      "多个未标注金额",
+      "外币",
+      "相互矛盾的收支方向",
+      "无法确定时间",
+      "跨来源疑似重复",
+      "无成功证据的历史结果",
+      "共同资金及代付缺本人身份",
+      "提现充值等资产移动",
+      "还款及贷款本金",
+      "预授权冻结解冻"
+    ],
+    "confirmed_requires": [
+      "可信来源或结构化交易证据",
+      "状态已完成",
+      "金额明确",
+      "无失败及未完成证据"
+    ]
+  },
+  "references": [
+    {
+      "project": "Auto-Accounting/AutoRule",
+      "commit": "3eb74c22f5028c40a2de226d750e1cd1b98bd09f",
+      "license": "package.json MIT; no root LICENSE",
+      "scope": "type/channel separation, no hook rule copied"
+    },
+    {
+      "project": "Macr0phag3/FlashBill",
+      "commit": "041b7b6c16143a0933f673c136c7f9eb79a7b9fb",
+      "license": "no root LICENSE found",
+      "scope": "CSV column taxonomy, not CSV importer added"
+    },
+    {
+      "project": "FuShengDuoBuYu/AutoBookKeepingBeta",
+      "commit": "bef698d16d942d1cdc06e49352d4bb71162f506c",
+      "license": "MIT",
+      "scope": "shared-account attribution risk, independent code"
+    }
+  ],
+  "official_sources": [
+    "https://pay.weixin.qq.com/doc/v3/merchant/4012791902",
+    "https://opendocs.alipay.com/open/00dn78",
+    "https://jpay.jd.com/open/doc?tenantId=2&navId=2&topId=15&docId=882"
+  ]
+}

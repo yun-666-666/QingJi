@@ -1,0 +1,20 @@
+package me.minis.ledger;
+/** Generated from rules/payment-pages-v1.json; package-independent. */
+public final class PaymentPageRules {
+ public static final String VERSION="2026.10.23.1";
+ public static final String SHA256="90464c25e8c73c261cad4492ea82092ba769ed5393648fe5a5cb6d12d8ef0d2f";
+ public static final String[] SUCCESS={"支付成功","付款成功","交易支付成功","订单支付成功","订单付款成功","您已支付成功","您已付款成功","付款已完成","支付已完成","扣款成功","自动扣款成功","免密支付成功"};
+ public static final String[] EXIT={"完成","完成支付","返回","返回首页","返回商家","返回商户","返回订单","查看订单","查看订单详情","查看车票","继续购票","返回应用","返回APP","返回App","返回客户端"};
+ public static final String[] PAID={"实付金额","实际支付金额","实际付款金额","实际扣款金额","实际支付","实际付款","实际扣款","实付款","实付","支付金额","付款金额","扣款金额","本次支付","本次付款"};
+ public static final String[] ORDER={"订单金额","订单总额","商品金额","原价","原金额","应付金额","应支付"};
+ public static final String[] DISCOUNT={"优惠券抵扣","碰一下立减","碰一碰立减","碰一碰优惠","优惠券优惠","优惠金额","优惠合计","优惠总额","本次优惠","支付优惠","红包抵扣","积分抵扣","随机立减","已优惠","优惠了","已节省","共优惠","立减","优惠","已省","共省","减免"};
+ public static final String[] BALANCE={"账户余额","可用余额","余额","剩余余额"};
+ public static final String[] MERCHANT={"收款方全称","收款商户全称","商户全称","收款方名称","收款商户名称","商户名称","商家名称","收款商户","收款方","商户","商家"};
+ public static final String[] METHOD={"付款方式","支付方式","支付渠道","付款渠道"};
+ public static final String[] HISTORY={"历史订单","订单详情","交易详情","账单详情","我的订单","未完成订单","已完成订单","全部订单","支付记录","交易记录"};
+ public static final String[] BLOCKED={"支付失败","付款失败","交易关闭","订单已取消","交易已取消","待支付","待付款","等待支付","订单未支付","退款成功","退款到账","已退款","收款成功","到账成功","验证码","聊天记录","聊天信息","发送消息","信用卡还款","花呗还款","贷款发放","提现到账","转入余额宝","余额宝转出","美元","港币","港元","欧元","日元","USD","HKD","EUR","JPY","http://","https://","澳元","新加坡元","加元","英镑","AUD","SGD","CAD","GBP"};
+ public static final String[] NON_PAYMENT_TITLES={"按住说话","按住 说话","发送","聊天","朋友圈","评论","发表","支付中","付款中","支付处理中","订单提交成功","提交订单成功"};
+ public static boolean has(String[] a,String s){for(String x:a)if(x.equals(s))return true;return false;}
+ private static final java.util.regex.Pattern END=java.util.regex.Pattern.compile("[！!]$");
+ public static boolean success(String s){return has(SUCCESS,END.matcher(s).replaceFirst(""));}
+}
